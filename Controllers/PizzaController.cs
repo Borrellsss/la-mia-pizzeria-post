@@ -6,18 +6,43 @@ namespace la_mia_pizzeria_static.Controllers
 {
     public class PizzaController : Controller
     {
+        private PizzeriaDbContext db;
+
+        public PizzaController()
+        {
+            db = new PizzeriaDbContext();
+        }
         public IActionResult Index()
         {
-            PizzeriaDbContext db = new PizzeriaDbContext();
             List<Pizza> pizzas = db.Pizzas.ToList<Pizza>();
             return View(pizzas);
         }
 
-        public IActionResult Detail(int id)
+        public IActionResult Details(int id)
         {
-            PizzeriaDbContext db = new PizzeriaDbContext();
             Pizza pizza = db.Pizzas.Find(id);
             return View(pizza);
+        }
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Create(Pizza pizza)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(pizza);
+            }
+
+            db.Pizzas.Add(pizza);
+            db.SaveChanges();
+
+            Pizza _pizza = db.Pizzas.OrderByDescending(p => p.Id).First();
+
+            return RedirectToAction("Details", new { id = _pizza.Id });
         }
     }
 }
